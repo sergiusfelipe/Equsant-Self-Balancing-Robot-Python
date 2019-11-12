@@ -129,26 +129,30 @@ while True:
     rotation_y = y_rotation(accelX, accelY, accelZ)
     
     #Complementary Filter
-    last_x = K * (last_x + gyro_x_delta) + (K1 * rotation_x)
+    last_y = K * (last_y + gyro_y_delta) + (K1 * rotation_y)
 
     #setting the PID values. Here you can change the P, I and D values according to yiur needs
     PID = PIDController(P=-78.5, I=1.0, D=1.0)
-    PIDx = PID.step(last_x)
+    PIDy = PID.step(last_y)
 
     #if the PIDx data is lower than 0.0 than move appropriately backward
-    if PIDx < 0.0:
-        backward(-float(PIDx))
+    if PIDy < 0.0:
+        if PIDy < -100:
+           PIDy = -100 
+        backward(-float(PIDy))
         #StepperFor(-PIDx)
     #if the PIDx data is higher than 0.0 than move appropriately forward
-    elif PIDx > 0.0:
-        forward(float(PIDx))
+    elif PIDy > 0.0:
+        if PIDy > 100:
+            PIDy = 100
+        forward(float(PIDy))
         #StepperBACK(PIDx)
     #if none of the above statements is fulfilled than do not move at all 
     else:
         equilibrium()
 
 
-    print(int(last_x), 'PID: ', int(PIDx))
+    print(int(last_y), 'PID: ', int(PIDy))
     sleep(0.02)
     
     
