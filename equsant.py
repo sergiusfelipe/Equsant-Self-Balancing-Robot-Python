@@ -1,6 +1,6 @@
 '''HARIOMHARIBOLJAIMATAJIPITAJIKIJAIJAI'''
 
-# Script Adaptado para o protótipo de robo pendulo invertido floki
+# Script Adaptado para o prototipo de robo pendulo invertido floki
 
 # Importando as bibliotacas utilizadas, lembrando que mpu6050 eh para python2.7
 from mpu6050 import mpu6050
@@ -52,7 +52,7 @@ def forward(velocity):
     GPIO.output(int3, GPIO.LOW)
     PWM4.ChangeDutyCycle(velocity)
 
-#Funcao para cado o valor do PID seja 0, ou seja, o robo está na posição de equilíbrio
+#Funcao para cado o valor do PID seja 0, ou seja, o robo esta na posicao de equilibrio
 def equilibrium():
     GPIO.output(int1, False)
     GPIO.output(int2, False)
@@ -104,7 +104,7 @@ gyro_total_x = (last_x) - gyro_offset_x
 gyro_total_y = (last_y) - gyro_offset_y
 
 
-#o loop principal em que será feito todo o controle de equilíbrio
+#o loop principal em que sera feito todo o controle de equilibrio
 while True:
     accel_data = sensor.get_accel_data()
     gyro_data = sensor.get_gyro_data()
@@ -136,17 +136,19 @@ while True:
     PID = PIDController(P=-78.5, I=1.0, D=1.0)
     PIDy = PID.step(last_y)
 
-    #se PIDy < 0 o sentidos motores será antihorario com intensidade PIDy
+    #se PIDy < 0 o sentidos motores sera antihorario com intensidade PIDy
     if PIDy < 0.0:
-        if PIDy < -100:
-           PIDy = -100 
-        backward(-float(PIDy))
+        if PIDy < -1550:
+           PIDy = -1550 
+        velocidade = PIDy * (100/1550)
+        backward(-float(velocidade))
         #StepperFor(-PIDx)
     #se PIDy > 0 entao o sentido dos motores sera horario com intensidade PIDy
     elif PIDy > 0.0:
-        if PIDy > 100:
-            PIDy = 100
-        forward(float(PIDy))
+        if PIDy > 1550:
+            PIDy = 1550
+         velocidade = PIDy * (100/1550)
+        forward(float(velocidade))
         #StepperBACK(PIDx)
     #se nenhuma das condicoes anteriores for setisfeita, entao o robo esta em equilibrio 
     else:
