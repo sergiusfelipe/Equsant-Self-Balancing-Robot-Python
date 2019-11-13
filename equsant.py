@@ -1,8 +1,8 @@
 '''HARIOMHARIBOLJAIMATAJIPITAJIKIJAIJAI'''
 
-#a python script to be used with Balancing robots
+# Script Adaptado para o protótipo de robo pendulo invertido floki
 
-# Importing all necessary librarys and classes
+# Importando as bibliotacas utilizadas, lembrando que mpu6050 eh para python2.7
 from mpu6050 import mpu6050
 from time import sleep
 import math
@@ -11,10 +11,10 @@ import  RPi.GPIO as GPIO
 
 
 
-GPIO.setmode(GPIO.BCM) #Setting the Mode to use. I am using the BCM setup
+GPIO.setmode(GPIO.BCM) #Setando o modo de pinagem BCM
 GPIO.setwarnings(False) 
 
-#Declaring the GPIO Pins that the motor controller is set with
+#Declarando os pinos de controle dos motores
 int1 = 21
 int2 = 20
 int3 = 16
@@ -25,7 +25,7 @@ GPIO.setup(int2, GPIO.OUT)
 GPIO.setup(int3, GPIO.OUT)
 GPIO.setup(int4, GPIO.OUT)
 
-#Pulse width modulation: the speed changes accordingly the inclination angle
+#Configurando os pinos como PWM
 PWM1 = GPIO.PWM(21, 100)
 PWM2 = GPIO.PWM(20, 100)
 PWM3 = GPIO.PWM(16, 100)
@@ -38,21 +38,21 @@ PWM3.start(0)
 PWM4.start(0)
 
 
-#This backward function takes a velocity argument that is the PID value. Both motors drives backward
+#Funcao que fara o robo andar pra tras e tem como argumento de entrada o valor de PID
 def backward(velocity):
     PWM1.ChangeDutyCycle(velocity)
     GPIO.output(int2, GPIO.LOW)
     PWM3.ChangeDutyCycle(velocity)
     GPIO.output(int4, GPIO.LOW)
 
-#Alike the backward funtion this forward function does the same thing but moves both the motors forward.
+#Tal como a funcao anterior, mas fara com que o robo ande pra frente
 def forward(velocity):
     GPIO.output(int1, GPIO.LOW)
     PWM2.ChangeDutyCycle(velocity)
     GPIO.output(int3, GPIO.LOW)
     PWM4.ChangeDutyCycle(velocity)
 
-#If the PID value is 0 (the Robot is 'balanced') it uses this equilibrium function.
+#Funcao para cado o valor do PID seja 0, ou seja, o robo está na posição de equilíbrio
 def equilibrium():
     GPIO.output(int1, False)
     GPIO.output(int2, False)
@@ -61,14 +61,15 @@ def equilibrium():
 
 
 sensor = mpu6050(0x68)
-#K and K1 --> Constants used with the complementary filter
+#K e K1 --> Constantes para o Filtro Complementar de Shane Colton
 K = 0.98
 K1 = 1 - K
 
+#define tempo de amostragem
 time_diff = 0.02
 ITerm = 0
 
-#Calling the MPU6050 data 
+#adiquire os primeiros valores do sensor 
 accel_data = sensor.get_accel_data()
 gyro_data = sensor.get_gyro_data()
 
@@ -80,7 +81,7 @@ gTempX = gyro_data['x']
 gTempY = gyro_data['y']
 gTempZ = gyro_data['z']
 
-#some math 
+#algumas funcoes matematicas 
 def distance(a, b):
     return math.sqrt((a*a) + (b*b))
 
@@ -103,7 +104,7 @@ gyro_total_x = (last_x) - gyro_offset_x
 gyro_total_y = (last_y) - gyro_offset_y
 
 
-#the so called 'main loop' that loops around and tells the motors wether to move or not 
+#o loop principal em que será feito todo o controle de equilíbrio
 while True:
     accel_data = sensor.get_accel_data()
     gyro_data = sensor.get_gyro_data()
@@ -128,26 +129,26 @@ while True:
     rotation_x = x_rotation(accelX, accelY, accelZ)
     rotation_y = y_rotation(accelX, accelY, accelZ)
     
-    #Complementary Filter
+    #Filtro COmplementar de Shane Colton
     last_y = K * (last_y + gyro_y_delta) + (K1 * rotation_y)
 
-    #setting the PID values. Here you can change the P, I and D values according to yiur needs
+    #configuracao dos parametros do controlador PID
     PID = PIDController(P=-78.5, I=1.0, D=1.0)
     PIDy = PID.step(last_y)
 
-    #if the PIDx data is lower than 0.0 than move appropriately backward
+    #se PIDy < 0 o sentidos motores será antihorario com intensidade PIDy
     if PIDy < 0.0:
         if PIDy < -100:
            PIDy = -100 
         backward(-float(PIDy))
         #StepperFor(-PIDx)
-    #if the PIDx data is higher than 0.0 than move appropriately forward
+    #se PIDy > 0 entao o sentido dos motores sera horario com intensidade PIDy
     elif PIDy > 0.0:
         if PIDy > 100:
             PIDy = 100
         forward(float(PIDy))
         #StepperBACK(PIDx)
-    #if none of the above statements is fulfilled than do not move at all 
+    #se nenhuma das condicoes anteriores for setisfeita, entao o robo esta em equilibrio 
     else:
         equilibrium()
 
