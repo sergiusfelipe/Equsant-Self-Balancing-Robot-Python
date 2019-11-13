@@ -147,7 +147,7 @@ while True:
     elif PIDy > 0.0:
         if PIDy > 1550:
             PIDy = 1550
-         velocidade = PIDy * (100/1550)
+        velocidade = PIDy * (100/1550)
         forward(float(velocidade))
         #StepperBACK(PIDx)
     #se nenhuma das condicoes anteriores for setisfeita, entao o robo esta em equilibrio 
